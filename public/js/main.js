@@ -14,7 +14,7 @@ import { formatBytes } from './utils.js';
 import { tickSound } from './audio.js';
 import { addText, updateSelected, renderList, renderEditor, renderOverlays, startDrag, recordPoint, getFontSizePx, setRender as setEditorRender } from './editor.js';
 import { generatePreview, saveAfterPreview, closePreviewOnly, redoPreview, closePreviewAndReset, setRender as setPreviewRender } from './preview.js';
-import { initSavedFolder, pickSaveFolder, renderSavedBar, setRender as setSavedRender } from './saved-bar.js';
+import { initSavedFolder, pickSaveFolder, renderSavedBar, saveToFolder, loadFolderContents, setRender as setSavedRender } from './saved-bar.js';
 import { initTheme, setRender as setThemeRender } from './theme.js';
 import { convertVideoToGif } from './ffmpeg.js';
 

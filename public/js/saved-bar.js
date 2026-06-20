@@ -91,7 +91,7 @@ export async function pickSaveFolder() {
 /* ------------------------------------------------------------------ */
 /*  Read all .gif / .png files from the chosen folder into savedItems. */
 /* ------------------------------------------------------------------ */
-async function loadFolderContents() {
+export async function loadFolderContents() {
   if (!state.directoryHandle) return;
   const items = [];
   try {
@@ -110,15 +110,25 @@ async function loadFolderContents() {
 /* ------------------------------------------------------------------ */
 /*  Write a blob to the chosen folder.                                 */
 /* ------------------------------------------------------------------ */
-export async function saveToFolder(blob, fileName) {
+export async function saveToFolder(blob, fileName, retries = 2) {
   if (!state.directoryHandle) return null;
-  try {
-    const fileHandle = await state.directoryHandle.getFileHandle(fileName, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    return fileHandle;
-  } catch { return null; }
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const fileHandle = await state.directoryHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return fileHandle;
+    } catch (err) {
+      if (attempt < retries) {
+        // Permission may need a moment — retry after a short delay
+        await new Promise(r => setTimeout(r, 300));
+        continue;
+      }
+      return null;
+    }
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -130,9 +140,12 @@ export function renderSavedBar() {
     return;
   }
   els.savedBar.hidden = false;
+  els.folderLabel.hidden = true;
+  els.pickFolderBtn.textContent = state.directoryHandle ? '📁 Change folder' : '📁 Set save folder';
   els.folderLabel.hidden = !state.directoryHandle;
-  els.folderLabel.textContent = state.directoryHandle?.name || '';
-  els.pickFolderBtn.textContent = state.directoryHandle ? 'Change folder' : 'Set save folder';
+  if (state.directoryHandle) {
+    els.folderLabel.textContent = `📂 ${state.directoryHandle.name}`;
+  }
   els.savedList.innerHTML = '';
   for (const item of state.savedItems) {
     const div = document.createElement('div');

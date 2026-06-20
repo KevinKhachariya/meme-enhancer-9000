@@ -6,7 +6,7 @@ import { els, setStatus, showToast } from './dom.js';
 import { formatBytes } from './utils.js';
 import { tickSound } from './audio.js';
 import { renderStillImage, renderAnimatedGif } from './ffmpeg.js';
-import { saveToFolder, renderSavedBar } from './saved-bar.js';
+import { saveToFolder, renderSavedBar, loadFolderContents } from './saved-bar.js';
 
 let render = () => {};
 export function setRender(fn) { render = fn; }
@@ -77,16 +77,34 @@ export async function saveAfterPreview() {
       if (ok !== 'granted') { showToast('Folder permission denied'); return; }
       state.directoryHandle = handle;
       state.directoryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      await idbSet('directoryHandle', { handle, id: state.directoryId });
+      // Best-effort IndexedDB save — don't block on failure
+      idbSet('directoryHandle', { handle, id: state.directoryId }).catch(() => {});
       for (const item of state.savedItems) { if (item.url) URL.revokeObjectURL(item.url); }
       state.savedItems = [];
     } catch (err) {
-      if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
-        console.warn('Folder picker error:', err);
-        showToast('Could not access folder. Try a different location or browser.');
+      if (err.name !== 'AbortError') {
+        console.warn('Folder picker warning:', err);
+        // If we got a handle, keep it and continue
+        if (!state.directoryHandle) {
+          showToast('Could not access folder. Try again.');
+          return;
+        }
+      } else {
+        return; // User cancelled the picker
       }
-      return;
     }
+  }
+
+  // Double-check permission is still valid
+  if (state.directoryHandle) {
+    try {
+      const perm = await state.directoryHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') {
+        state.directoryHandle = null;
+        showToast('Folder permission was revoked. Try again.');
+        return;
+      }
+    } catch { /* continue */ }
   }
 
   // Step 2: Disable button and render
@@ -108,6 +126,8 @@ export async function saveAfterPreview() {
       setStatus(`Saved! ${file.name} (${formatBytes(file.size)})`);
       showToast('Saved!');
       tickSound('success');
+      // Refresh folder contents to pick up the new file
+      loadFolderContents().catch(() => {});
       closePreviewAndReset();
     } else {
       showToast('Save failed — could not write to folder');
