@@ -1,8 +1,5 @@
-*.mp4
-temp/
 node_modules/
+dist/
+archive/vanilla-reference/public/vendor/
 .DS_Store
 *.log
-test-*
-*.png
-public/vendor/
