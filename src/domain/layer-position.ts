@@ -1,4 +1,8 @@
 export type NormalizedPoint = Readonly<{
+  /**
+   * Position relative to the media surface. Values between 0 and 1 are inside
+   * the media; values outside that range intentionally allow off-media layers.
+   */
   x: number;
   y: number;
 }>;
@@ -15,7 +19,7 @@ export function pointFromClientPosition(
   clientY: number,
   rect: RectLike,
 ): NormalizedPoint {
-  return clampPoint({
+  return finitePoint({
     x: rect.width > 0 ? (clientX - rect.left) / rect.width : 0,
     y: rect.height > 0 ? (clientY - rect.top) / rect.height : 0,
   });
@@ -28,7 +32,7 @@ export function draggedPointFromClientPosition(params: {
   pointerOffset: NormalizedPoint;
 }): NormalizedPoint {
   const pointer = pointFromClientPosition(params.clientX, params.clientY, params.rect);
-  return clampPoint({
+  return finitePoint({
     x: pointer.x - params.pointerOffset.x,
     y: pointer.y - params.pointerOffset.y,
   });
@@ -44,14 +48,9 @@ export function pointerOffsetFromLayerPosition(
   };
 }
 
-export function clampPoint(point: NormalizedPoint): NormalizedPoint {
+function finitePoint(point: NormalizedPoint): NormalizedPoint {
   return {
-    x: clamp(point.x, 0, 1),
-    y: clamp(point.y, 0, 1),
+    x: Number.isFinite(point.x) ? point.x : 0,
+    y: Number.isFinite(point.y) ? point.y : 0,
   };
-}
-
-function clamp(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return min;
-  return Math.max(min, Math.min(max, value));
 }
