@@ -35,7 +35,8 @@ export async function convertVideoToGif(file: File, options: VideoGifConversionO
       '-i', inputPath,
       '-an',
       '-t', String(duration),
-      '-filter_complex', `[0:v]fps=${fps},${scaleFilter},split[s0][s1];[s0]palettegen=max_colors=${colors}[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5`,
+      '-filter_complex', `[0:v]fps=${fps},${scaleFilter},split[s0][s1];[s0]palettegen=max_colors=${colors}[p];[s1][p]paletteuse=dither=none`,
+      '-gifflags', '-offsetting',
       '-loop', '0',
       outputPath,
     ]);

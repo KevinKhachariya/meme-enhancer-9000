@@ -5,7 +5,7 @@ export const defaultExportSettings = {
   outputWidth: '',
   outputHeight: '',
   gifFps: 12,
-  gifColors: 96,
+  gifColors: 64,
   gifDither: 'none',
 } as const;
 
@@ -14,7 +14,7 @@ export const defaultVideoConversionSettings: VideoConversionSettings = {
   fps: 12,
   maxWidth: 640,
   maxHeight: 640,
-  colors: 96,
+  colors: 64,
 };
 
 export function createInitialState(theme: AppState['theme'] = 'dark'): AppState {

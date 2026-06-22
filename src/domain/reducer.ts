@@ -42,7 +42,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         selectedLayerId: null,
         exportSettings: {
           ...state.exportSettings,
-          duration: action.media.duration ?? state.exportSettings.duration,
+          // Default export duration to 5s — longer durations create huge files
+          duration: Math.min(action.media.duration ?? state.exportSettings.duration, 5),
           outputWidth: action.media.width ? String(action.media.width) : '',
           outputHeight: action.media.height ? String(action.media.height) : '',
         },

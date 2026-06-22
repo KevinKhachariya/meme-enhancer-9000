@@ -154,6 +154,10 @@
         layers: $appStore.layers,
         fps: $appStore.exportSettings.gifFps,
         colors: $appStore.exportSettings.gifColors,
+        duration: $appStore.exportSettings.duration,
+        outputWidth: $appStore.exportSettings.outputWidth ? Number($appStore.exportSettings.outputWidth) || undefined : undefined,
+        outputHeight: $appStore.exportSettings.outputHeight ? Number($appStore.exportSettings.outputHeight) || undefined : undefined,
+        dither: $appStore.exportSettings.gifDither,
         onProgress: ({ message }) => {
           previewMessage = message;
         },

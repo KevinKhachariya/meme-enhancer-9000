@@ -302,6 +302,10 @@ button.compact {
   justify-content: flex-end;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .load-status {
   display: grid;
   gap: 0.45rem;
@@ -310,8 +314,30 @@ button.compact {
   font-weight: 700;
 }
 
+.loader {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid color-mix(in srgb, #6cc3ae 26%, transparent);
+  border-top-color: #6cc3ae;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
 .load-status.error {
   color: #e06b66;
+}
+
+.load-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.load-status.error .loader {
+  border-color: color-mix(in srgb, #e06b66 26%, transparent);
+  border-top-color: #e06b66;
 }
 
 .load-status progress {

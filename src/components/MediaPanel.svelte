@@ -100,7 +100,12 @@
 
   {#if mediaLoad.message}
     <div class={`load-status${mediaLoad.status === 'error' ? ' error' : ''}`}>
-      <span>{mediaLoad.message}</span>
+      <div class="load-status-row">
+        {#if mediaLoad.status === 'loading'}
+          <span class="loader"></span>
+        {/if}
+        <span>{mediaLoad.message}</span>
+      </div>
       {#if typeof mediaLoad.progress === 'number'}
         <progress max="1" value={mediaLoad.progress}></progress>
       {/if}
