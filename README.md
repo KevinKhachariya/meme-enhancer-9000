@@ -31,13 +31,4 @@ npm run dev
 GPL-2.0-or-later. See [LICENSE](./LICENSE) for the full terms.
 
 This project uses [FFmpeg](https://ffmpeg.org) via `@ffmpeg/core` (GPL-2.0-or-later).
-See [ATTRIBUTION.md](./ATTRIBUTION.md) for third-party license details. The upstream
-FFmpeg license files are included as `COPYING.GPLv2` and `COPYING.LGPLv2.1`.
-
-## Architecture rule
-
-Keep domain logic pure where possible:
-
-- pure types/factories/reducers in `src/domain/`
-- browser side effects in Svelte components, stores, or future service modules
-- no FFmpeg/export logic in UI components once those stages begin
+See [ATTRIBUTION.md](./ATTRIBUTION.md) for third-party license details.
