@@ -20,7 +20,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, 'dist');
-const PORT = parseInt(process.env.PORT || '9000', 10);
+const MAX_PORT_ATTEMPTS = 10;
+
+let PORT = parseInt(process.env.PORT || '9000', 10);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -105,12 +107,34 @@ function serve(req, res) {
 
 const server = http.createServer(serve);
 
-server.listen(PORT, () => {
-  const addr = `http://localhost:${PORT}`;
-  console.log(`\n  🎭 Meme Enhancer 9000\n`);
-  console.log(`  ➜  Local:   ${addr}`);
-  console.log(`  ➜  Network: http://${getLocalIP()}:${PORT}\n`);
-});
+function tryListen(attempt) {
+  server.listen(PORT, () => {
+    const addr = `http://localhost:${PORT}`;
+    console.log(`\n  🎭 Meme Enhancer 9000\n`);
+    console.log(`  ➜  Local:   ${addr}`);
+    console.log(`  ➜  Network: http://${getLocalIP()}:${PORT}\n`);
+  });
+
+  server.once('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      if (attempt < MAX_PORT_ATTEMPTS) {
+        const nextPort = PORT + 1;
+        console.warn(`  ⚠  Port ${PORT} is in use, trying ${nextPort}...`);
+        PORT = nextPort;
+        tryListen(attempt + 1);
+      } else {
+        console.error(`\n  ✖  Could not find an available port after ${MAX_PORT_ATTEMPTS} attempts.`);
+        console.error(`  ✖  Please free up a port in the range ${parseInt(process.env.PORT || '9000', 10)}–${PORT} and try again.\n`);
+        process.exit(1);
+      }
+    } else {
+      console.error(`\n  ✖  Failed to start server:`, err.message);
+      process.exit(1);
+    }
+  });
+}
+
+tryListen(1);
 
 function getLocalIP() {
   const nets = os.networkInterfaces();
