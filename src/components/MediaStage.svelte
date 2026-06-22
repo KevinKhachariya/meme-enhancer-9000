@@ -131,7 +131,7 @@
                 <button
                   type="button"
                   class={`overlay-handle preview-text${layer.id === selectedLayerId ? ' selected' : ''}${layer.move ? ' recording' : ''}`}
-                  style={`left:${layer.x * 100}%;top:${layer.y * 100}%;font-size:${layer.fontSizePx}px;color:${layer.color};`}
+                  style={`left:${layer.x * 100}%;top:${layer.y * 100}%;font-size:${layer.fontSizePx}px;font-family:${layer.fontFamily};color:${layer.color};`}
                   onpointerdown={(event) => startLayerDrag(event, layer)}
                 >
                   {layer.text}

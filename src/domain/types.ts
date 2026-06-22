@@ -21,6 +21,7 @@ export type TextLayer = BaseLayer & Readonly<{
   type: 'text';
   text: string;
   fontSizePx: number;
+  fontFamily: string;
   color: string;
   outlineColor: string;
   outlineWidth: number;

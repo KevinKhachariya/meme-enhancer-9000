@@ -17,6 +17,7 @@ export function createTextLayer(params: {
     move: false,
     path: [],
     fontSizePx: 48,
+    fontFamily: 'system-ui, sans-serif',
     color: '#ffffff',
     outlineColor: '#000000',
     outlineWidth: 3,

@@ -217,7 +217,7 @@ function drawTextLayer(
   const fontPx = Math.max(8, layer.fontSizePx);
   const strokeWidth = Math.max(0, layer.outlineWidth);
   ctx.save();
-  ctx.font = `${fontPx}px Impact, Arial Black, sans-serif`;
+  ctx.font = `${fontPx}px ${layer.fontFamily || 'system-ui, sans-serif'}`;
   ctx.fillStyle = layer.color;
   ctx.strokeStyle = layer.outlineColor;
   ctx.lineWidth = strokeWidth;

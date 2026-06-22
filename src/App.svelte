@@ -22,6 +22,15 @@
   let previewPanelOpen = $state(false);
   let mediaLoadToken = 0;
 
+  const freeFontOptions = [
+    { label: 'System sans', value: 'system-ui, sans-serif' },
+    { label: 'Strong sans', value: 'ui-sans-serif, system-ui, sans-serif' },
+    { label: 'Classic serif', value: 'serif' },
+    { label: 'Mono caption', value: 'ui-monospace, monospace' },
+    { label: 'Casual script', value: 'cursive' },
+    { label: 'Display/fantasy', value: 'fantasy' },
+  ] as const;
+
   async function loadMedia(file: File) {
     const token = ++mediaLoadToken;
     appStore.dispatch({ type: 'media/loadStarted', fileName: file.name || 'media' });
@@ -288,9 +297,6 @@
     <aside class="panel">
       <div class="section-head">
         <h2>Layers</h2>
-        <button type="button" disabled={!$appStore.media} onclick={togglePreviewPanel}>
-          {previewPanelOpen ? 'Hide preview' : 'Generate preview'}
-        </button>
       </div>
       <div class="layer-actions">
         <button type="button" disabled={!$appStore.media || $appStore.mediaLoad.status === 'loading'} onclick={addTextLayer}>Add text</button>
@@ -329,74 +335,119 @@
     />
 
     <aside class="panel layer-editor">
-      <h2>Selected layer</h2>
+      <div class="section-head editor-topbar">
+        <div>
+          <p class="eyebrow">Edit</p>
+          <h2>Selected layer</h2>
+        </div>
+        <button type="button" class="primary-action" disabled={!$appStore.media} onclick={togglePreviewPanel}>
+          {previewPanelOpen ? 'Hide preview' : 'Generate preview'}
+        </button>
+      </div>
+
       {#if $selectedLayer}
-        <p class="muted editor-hint">Drag the selected layer on the preview to move it.</p>
+        <p class="muted editor-hint">Drag the selected layer on the canvas, then tune it here.</p>
 
         {#if $selectedLayer.type === 'text'}
-          <label>
-            Text
-            <textarea
-              rows="3"
-              value={$selectedLayer.text}
-              oninput={(event) => updateSelectedLayer({ text: (event.currentTarget as HTMLTextAreaElement).value })}
-            ></textarea>
-          </label>
+          <div class="editor-card">
+            <div class="editor-card-head">
+              <strong>Text content</strong>
+              <small>What appears on the meme</small>
+            </div>
+            <label>
+              Caption
+              <textarea
+                rows="4"
+                value={$selectedLayer.text}
+                oninput={(event) => updateSelectedLayer({ text: (event.currentTarget as HTMLTextAreaElement).value })}
+              ></textarea>
+            </label>
+          </div>
 
-          <label>
-            Font size
-            <input
-              type="number"
-              min="8"
-              max="300"
-              step="1"
-              value={$selectedLayer.fontSizePx}
-              oninput={(event) => updateSelectedLayer({ fontSizePx: Number((event.currentTarget as HTMLInputElement).value) })}
-            />
-          </label>
+          <div class="editor-card">
+            <div class="editor-card-head">
+              <strong>Style</strong>
+              <small>Free generic browser font families; no paid fonts bundled</small>
+            </div>
+            <label>
+              Font
+              <select
+                value={$selectedLayer.fontFamily}
+                onchange={(event) => updateSelectedLayer({ fontFamily: (event.currentTarget as HTMLSelectElement).value })}
+              >
+                {#each freeFontOptions as font}
+                  <option value={font.value}>{font.label}</option>
+                {/each}
+              </select>
+            </label>
 
-          <label>
-            Color
-            <input
-              type="color"
-              value={$selectedLayer.color}
-              oninput={(event) => updateSelectedLayer({ color: (event.currentTarget as HTMLInputElement).value })}
-            />
-          </label>
+            <div class="editor-two-col">
+              <label>
+                Size
+                <input
+                  type="number"
+                  min="8"
+                  max="300"
+                  step="1"
+                  value={$selectedLayer.fontSizePx}
+                  oninput={(event) => updateSelectedLayer({ fontSizePx: Number((event.currentTarget as HTMLInputElement).value) })}
+                />
+              </label>
+
+              <label>
+                Color
+                <input
+                  type="color"
+                  value={$selectedLayer.color}
+                  oninput={(event) => updateSelectedLayer({ color: (event.currentTarget as HTMLInputElement).value })}
+                />
+              </label>
+            </div>
+          </div>
         {:else}
-          <label>
-            Scale
-            <input
-              type="range"
-              min="0.2"
-              max="3"
-              step="0.05"
-              value={$selectedLayer.scale}
-              oninput={(event) => updateSelectedLayer({ scale: Number((event.currentTarget as HTMLInputElement).value) })}
-            />
-          </label>
+          <div class="editor-card">
+            <div class="editor-card-head">
+              <strong>Image layer</strong>
+              <small>Resize and blend the selected image</small>
+            </div>
+            <label>
+              Scale <span class="field-value">{$selectedLayer.scale.toFixed(2)}×</span>
+              <input
+                type="range"
+                min="0.2"
+                max="3"
+                step="0.05"
+                value={$selectedLayer.scale}
+                oninput={(event) => updateSelectedLayer({ scale: Number((event.currentTarget as HTMLInputElement).value) })}
+              />
+            </label>
 
-          <label>
-            Opacity
-            <input
-              type="range"
-              min="0.1"
-              max="1"
-              step="0.05"
-              value={$selectedLayer.opacity}
-              oninput={(event) => updateSelectedLayer({ opacity: Number((event.currentTarget as HTMLInputElement).value) })}
-            />
-          </label>
+            <label>
+              Opacity <span class="field-value">{Math.round($selectedLayer.opacity * 100)}%</span>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={$selectedLayer.opacity}
+                oninput={(event) => updateSelectedLayer({ opacity: Number((event.currentTarget as HTMLInputElement).value) })}
+              />
+            </label>
+          </div>
         {/if}
 
-        <div class="record-controls">
+        <div class="editor-card motion-card">
+          <div class="editor-card-head">
+            <strong>Motion path</strong>
+            <small>Optional movement for GIF exports</small>
+          </div>
           <label class="check-row">
             <input
               type="checkbox"
               checked={$selectedLayer.move}
               onchange={(event) => toggleSelectedLayerRecording((event.currentTarget as HTMLInputElement).checked)}
             />
-            <span>Use recorded movement path</span>
+            <span>Record movement while dragging</span>
           </label>
 
           {#if $selectedLayer.move}
@@ -406,16 +457,19 @@
                 {#if $selectedLayer.path.length}
                   Recorded {$selectedLayer.path.length} points over {($selectedLayer.path.at(-1)?.t ?? 0).toFixed(2)}s. Drag again to add more.
                 {:else}
-                  Place the layer where it should start, then drag it. GIF playback restarts from frame 0 so path points sync with the animation.
+                  Drag the layer on the canvas to record a synced movement path.
                 {/if}
               </p>
             </div>
           {/if}
         </div>
 
-        <button type="button" class="danger" onclick={deleteSelectedLayer}>Delete layer</button>
+        <button type="button" class="danger editor-danger" onclick={deleteSelectedLayer}>Delete layer</button>
       {:else}
-        <p class="muted">Select a layer or add a new one.</p>
+        <div class="empty-editor">
+          <strong>No layer selected</strong>
+          <p class="muted">Add text or an image, then click it in the layer list or on the canvas.</p>
+        </div>
       {/if}
     </aside>
   </section>
