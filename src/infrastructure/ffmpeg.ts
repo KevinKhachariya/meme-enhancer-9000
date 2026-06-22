@@ -1,15 +1,16 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import coreURL from '@ffmpeg/core?url';
-import wasmURL from '@ffmpeg/core/wasm?url';
+let ffmpeg: import('@ffmpeg/ffmpeg').FFmpeg | null = null;
+let ffmpegLoadPromise: Promise<import('@ffmpeg/ffmpeg').FFmpeg> | null = null;
 
-let ffmpeg: FFmpeg | null = null;
-let ffmpegLoadPromise: Promise<FFmpeg> | null = null;
-
-export async function ensureFFmpeg(): Promise<FFmpeg> {
+export async function ensureFFmpeg(): Promise<import('@ffmpeg/ffmpeg').FFmpeg> {
   if (ffmpeg?.loaded) return ffmpeg;
   if (ffmpegLoadPromise) return ffmpegLoadPromise;
 
   ffmpegLoadPromise = (async () => {
+    const [{ FFmpeg }, coreURL, wasmURL] = await Promise.all([
+      import('@ffmpeg/ffmpeg'),
+      import('@ffmpeg/core?url').then((m) => m.default as string),
+      import('@ffmpeg/core/wasm?url').then((m) => m.default as string),
+    ]);
     const instance = new FFmpeg();
     await instance.load({ coreURL, wasmURL });
     ffmpeg = instance;
@@ -23,7 +24,7 @@ export async function ensureFFmpeg(): Promise<FFmpeg> {
   }
 }
 
-export async function cleanupWorkDir(instance: FFmpeg, workDir: string): Promise<void> {
+export async function cleanupWorkDir(instance: import('@ffmpeg/ffmpeg').FFmpeg, workDir: string): Promise<void> {
   let entries: Array<{ name: string; isDir: boolean }>;
 
   try {
