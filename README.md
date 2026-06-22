@@ -19,12 +19,37 @@ Private browser editor. Upload Image/Video/GIF, add text/image layers over the m
 - Record movement paths with GIF restart sync
 - Generate PNG/GIF preview and save through browser download
 
-## Run
+## Quick Start (no dev server)
+
+Build once, then serve with the included production server:
+
+```bash
+npm install
+npm run build
+npm start
+```
+
+Then open **http://localhost:9000**.
+
+> **Why a server?** The app uses FFmpeg WASM which relies on `SharedArrayBuffer`. This
+> requires special HTTP headers (`Cross-Origin-Opener-Policy` and
+> `Cross-Origin-Embedder-Policy`) — you can't just open `index.html` directly.
+> The built-in `server.js` handles this for you using only Node.js built-in modules,
+> no extra dependencies.
+
+## Development (hot-reload dev server)
+
+For active development with Vite's hot module replacement:
 
 ```bash
 npm install
 npm run dev
 ```
+
+Opens at **http://localhost:9000**. Changes to source files will reload the browser automatically.
+
+The dev server already includes the required `Cross-Origin-Opener-Policy` and
+`Cross-Origin-Embedder-Policy` headers, so FFmpeg WASM works out of the box.
 
 ## License
 
