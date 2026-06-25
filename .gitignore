@@ -1,5 +1,11 @@
 node_modules/
 dist/
+resources/
+bin/
+.tmp/
+.storage/
+neutralino.js
+neutralino.d.ts
 archive/vanilla-reference/public/vendor/
 .DS_Store
 *.log

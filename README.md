@@ -18,6 +18,8 @@ Private browser editor. Upload Image/Video/GIF, add text/image layers over the m
 - Move layers by dragging them on the preview
 - Record movement paths with GIF restart sync
 - Generate PNG/GIF preview and save through browser download
+- Desktop packaging with Neutralinojs for Windows, macOS, and Linux
+- Native desktop Save As dialog when running in the Neutralinojs app
 
 ## Quick Start (no dev server)
 
@@ -36,6 +38,23 @@ Then open **http://localhost:9000**.
 > `Cross-Origin-Embedder-Policy`) — you can't just open `index.html` directly.
 > The built-in `server.js` handles this for you using only Node.js built-in modules,
 > no extra dependencies.
+
+## Desktop app
+
+This project includes a Neutralinojs desktop wrapper branded as **Meme Enhancer 9000**. The desktop app uses the same local-only Svelte/FFmpeg WASM frontend and adds a native Save As flow for exports.
+
+```bash
+npm install
+npm run desktop:dev
+```
+
+Build desktop release bundles:
+
+```bash
+npm run desktop:build
+```
+
+Neutralinojs writes release artifacts to `dist/desktop/`. The GitHub release workflow template in `docs/github-release-workflow.yml` packages platform-specific downloads for Windows, macOS, and Linux.
 
 ## Development (hot-reload dev server)
 
