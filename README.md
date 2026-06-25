@@ -4,6 +4,10 @@
 
 Private browser editor. Upload Image/Video/GIF, add text/image layers over the media, move them with recorded paths, and save as Image or GIF.
 
+## Install
+
+Download the latest desktop app for your platform from the [GitHub Releases page](https://github.com/KevinKhachariya/meme-enhancer-9000/releases). Pick the ZIP for Windows, macOS, or Linux, extract it, and run **Meme Enhancer 9000**.
+
 ## Stack
 
 - Svelte 5 + TypeScript + Vite
@@ -39,7 +43,9 @@ Then open **http://localhost:9000**.
 > The built-in `server.js` handles this for you using only Node.js built-in modules,
 > no extra dependencies.
 
-## Desktop app
+## Desktop app development
+
+End users should install from the [GitHub Releases page](https://github.com/KevinKhachariya/meme-enhancer-9000/releases). The commands below are for local desktop development.
 
 This project includes a Neutralinojs desktop wrapper branded as **Meme Enhancer 9000**. The desktop app uses the same local-only Svelte/FFmpeg WASM frontend and adds a native Save As flow for exports.
 
