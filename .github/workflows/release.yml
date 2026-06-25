@@ -1,0 +1,61 @@
+name: Release desktop apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  neutralino-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Build Neutralinojs desktop bundle
+        run: npm run desktop:build
+
+      - name: Package platform downloads
+        run: |
+          cd dist/desktop/meme-enhancer-9000
+          zip -9 ../Meme-Enhancer-9000-windows-x64.zip meme-enhancer-9000-win_x64.exe resources.neu
+          zip -9 ../Meme-Enhancer-9000-linux-x64.zip meme-enhancer-9000-linux_x64 resources.neu
+          zip -9 ../Meme-Enhancer-9000-linux-arm64.zip meme-enhancer-9000-linux_arm64 resources.neu
+          zip -9 ../Meme-Enhancer-9000-linux-armhf.zip meme-enhancer-9000-linux_armhf resources.neu
+          zip -9 ../Meme-Enhancer-9000-macos-x64.zip meme-enhancer-9000-mac_x64 resources.neu
+          zip -9 ../Meme-Enhancer-9000-macos-arm64.zip meme-enhancer-9000-mac_arm64 resources.neu
+          zip -9 ../Meme-Enhancer-9000-macos-universal.zip meme-enhancer-9000-mac_universal resources.neu
+
+      - name: Upload GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          prerelease: false
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('Meme Enhancer 9000 {0}', github.ref_name) || format('Meme Enhancer 9000 desktop build {0}', github.run_number) }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('desktop-{0}', github.run_number) }}
+          body: Download the ZIP for your platform, extract it, and run Meme Enhancer 9000.
+          files: |
+            dist/desktop/Meme-Enhancer-9000-windows-x64.zip
+            dist/desktop/Meme-Enhancer-9000-linux-x64.zip
+            dist/desktop/Meme-Enhancer-9000-linux-arm64.zip
+            dist/desktop/Meme-Enhancer-9000-linux-armhf.zip
+            dist/desktop/Meme-Enhancer-9000-macos-x64.zip
+            dist/desktop/Meme-Enhancer-9000-macos-arm64.zip
+            dist/desktop/Meme-Enhancer-9000-macos-universal.zip

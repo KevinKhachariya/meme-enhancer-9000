@@ -1,0 +1,50 @@
+{
+  "applicationId": "com.memeenhancer9000.app",
+  "applicationName": "Meme Enhancer 9000",
+  "version": "0.0.1",
+  "defaultMode": "window",
+  "port": 0,
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "singlePageServe": true,
+  "url": "/",
+  "documentRoot": "/resources/",
+  "serverHeaders": {
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "require-corp",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "X-Content-Type-Options": "nosniff"
+  },
+  "nativeAllowList": [
+    "app.exit",
+    "filesystem.writeBinaryFile",
+    "os.showSaveDialog",
+    "window.*"
+  ],
+  "modes": {
+    "window": {
+      "title": "Meme Enhancer 9000",
+      "width": 1280,
+      "height": 860,
+      "minWidth": 960,
+      "minHeight": 640,
+      "center": true,
+      "resizable": true,
+      "exitProcessOnClose": true,
+      "icon": "/neutralino-icon.png",
+      "enableInspector": false
+    }
+  },
+  "applicationIcon": "neutralino-icon.png",
+  "author": "Meme Enhancer 9000 contributors",
+  "description": "Private local meme editor for image, GIF, and video memes.",
+  "copyright": "GPL-2.0-or-later",
+  "cli": {
+    "binaryName": "meme-enhancer-9000",
+    "resourcesPath": "/resources/",
+    "distributionPath": "/dist/desktop/",
+    "clientLibrary": "/neutralino.js",
+    "binaryVersion": "6.8.0",
+    "clientVersion": "6.8.0"
+  }
+}
