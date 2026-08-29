@@ -25,17 +25,15 @@ export async function convertVideoToGif(file: File, options: VideoGifConversionO
     await instance.writeFile(inputPath, new Uint8Array(await file.arrayBuffer()));
 
     const duration = Math.max(0.1, options.durationSeconds);
-    const fps = Math.max(1, Math.min(60, Math.round(options.fps)));
-    const maxWidth = Math.max(16, Math.round(options.maxWidth));
-    const maxHeight = Math.max(16, Math.round(options.maxHeight));
-    const colors = Math.max(2, Math.min(256, Math.round(options.colors)));
-    const scaleFilter = createBoundedScaleFilter(maxWidth, maxHeight);
 
     const exitCode = await instance.exec([
       '-i', inputPath,
       '-an',
       '-t', String(duration),
-      '-filter_complex', `[0:v]fps=${fps},${scaleFilter},split[s0][s1];[s0]palettegen=max_colors=${colors}[p];[s1][p]paletteuse=dither=none`,
+      // Keep the upload's native resolution and frame rate, use the full
+      // 256-color palette with Floyd–Steinberg dithering so the GIF quality
+      // matches the source video instead of downscaling/banding it.
+      '-filter_complex', `[0:v]split[s0][s1];[s0]palettegen=max_colors=256[p];[s1][p]paletteuse=dither=floyd_steinberg`,
       '-gifflags', '-offsetting',
       '-loop', '0',
       outputPath,
@@ -61,9 +59,4 @@ export async function convertVideoToGif(file: File, options: VideoGifConversionO
   }
 }
 
-function createBoundedScaleFilter(maxWidth: number, maxHeight: number): string {
-  const widthExpr = `if(gt(iw/ih,${maxWidth}/${maxHeight}),trunc(min(${maxWidth},iw)/2)*2,-2)`;
-  const heightExpr = `if(gt(iw/ih,${maxWidth}/${maxHeight}),-2,trunc(min(${maxHeight},ih)/2)*2)`;
-  return `scale='${widthExpr}':'${heightExpr}':flags=lanczos`;
-}
 
