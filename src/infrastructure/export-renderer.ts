@@ -1,4 +1,4 @@
-import { cleanupWorkDir, ensureFFmpeg } from './ffmpeg';
+import { cleanupWorkDir, withFFmpeg } from './ffmpeg';
 import { layerPositionAtTime } from '../domain/layer-playback';
 import type { Layer, MediaFile } from '../domain/types';
 
@@ -65,117 +65,114 @@ async function renderStillPreview(options: PreviewRenderOptions): Promise<Previe
 }
 
 async function renderGifPreview(options: PreviewRenderOptions): Promise<PreviewRenderResult> {
-  const ffmpeg = await ensureFFmpeg();
-  const workDir = `/preview-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const inputPath = `${workDir}/input.gif`;
-  const rawExtractedPath = `${workDir}/frames.raw`;
-  const rawOutputPath = `${workDir}/layered.raw`;
-  const outputPath = `${workDir}/output.gif`;
-  const fps = Math.max(1, Math.min(30, Math.round(options.fps)));
-  const colors = Math.max(2, Math.min(256, Math.round(options.colors)));
-  const duration = Math.max(0.1, Math.min(options.duration, options.media.duration ?? options.duration));
-  // Use export settings for output dimensions, falling back to media's natural size
-  const width = options.outputWidth ?? options.media.width ?? 640;
-  const height = options.outputHeight ?? options.media.height ?? 360;
-  const frameSize = width * height * 4;
-  const frameCount = Math.ceil(duration * fps);
-
-  // FFmpeg's progress value is not normalized — clamp it to 0–1 before displaying
-  const progressHandler = ({ progress }: { progress: number }) => {
-    if (Number.isFinite(progress)) {
-      const clamped = Math.max(0, Math.min(1, progress));
-      options.onProgress?.({ message: `Encoding GIF... ${Math.round(clamped * 100)}%`, progress: clamped });
-    }
+  const onFfmpegProgress = (progress: number) => {
+    options.onProgress?.({
+      message: `Encoding GIF... ${Math.round(progress * 100)}%`,
+      progress,
+    });
   };
 
-  ffmpeg.on('progress', progressHandler);
-
-  try {
-    options.onProgress?.({ message: 'Preparing GIF frames...' });
-    await ffmpeg.createDir(workDir);
-    await ffmpeg.writeFile(inputPath, new Uint8Array(await options.media.blob.arrayBuffer()));
-
-    // Extract ALL frames as a single rawvideo file — avoids %d pattern matching issues
-    const extractCode = await ffmpeg.exec([
-      '-i', inputPath,
-      '-t', String(duration),
-      '-vf', `fps=${fps},scale=${width}:${height}:flags=lanczos`,
-      '-f', 'rawvideo',
-      '-pix_fmt', 'rgba',
-      rawExtractedPath,
-    ]);
-    if (extractCode !== 0) throw new Error(`Could not extract GIF frames (${extractCode})`);
-
-    const allFrameData = await ffmpeg.readFile(rawExtractedPath);
-    if (typeof allFrameData === 'string') throw new Error('FFmpeg returned text frame data');
-
-    const actualFrameCount = Math.floor(allFrameData.length / frameSize);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not create canvas context');
-
-    const layerBitmaps = await loadImageLayerBitmaps(options.layers);
-    const imageData = ctx.createImageData(width, height);
-
-    // Build the output raw data by processing each frame
-    const outputSize = actualFrameCount * frameSize;
-    const outputBuffer = new Uint8Array(outputSize);
+  return withFFmpeg(async (ffmpeg) => {
+    const workDir = `/preview-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const inputPath = `${workDir}/input.gif`;
+    const rawExtractedPath = `${workDir}/frames.raw`;
+    const rawOutputPath = `${workDir}/layered.raw`;
+    const outputPath = `${workDir}/output.gif`;
+    const fps = Math.max(1, Math.min(30, Math.round(options.fps)));
+    const colors = Math.max(2, Math.min(256, Math.round(options.colors)));
+    const duration = Math.max(0.1, Math.min(options.duration, options.media.duration ?? options.duration));
+    // Use export settings for output dimensions, falling back to media's natural size
+    const width = options.outputWidth ?? options.media.width ?? 640;
+    const height = options.outputHeight ?? options.media.height ?? 360;
+    const frameSize = width * height * 4;
+    const frameCount = Math.ceil(duration * fps);
 
     try {
-      for (let index = 0; index < actualFrameCount; index++) {
-        options.onProgress?.({ message: `Drawing layers on frame ${index + 1}/${actualFrameCount}...`, progress: (index + 1) / actualFrameCount });
+      options.onProgress?.({ message: 'Preparing GIF frames...' });
+      await ffmpeg.createDir(workDir);
+      await ffmpeg.writeFile(inputPath, new Uint8Array(await options.media.blob.arrayBuffer()));
 
-        const offset = index * frameSize;
-        const frameSlice = allFrameData.subarray(offset, offset + frameSize);
+      // Extract ALL frames as a single rawvideo file — avoids %d pattern matching issues
+      const extractCode = await ffmpeg.exec([
+        '-i', inputPath,
+        '-t', String(duration),
+        '-vf', `fps=${fps},scale=${width}:${height}:flags=lanczos`,
+        '-f', 'rawvideo',
+        '-pix_fmt', 'rgba',
+        rawExtractedPath,
+      ]);
+      if (extractCode !== 0) throw new Error(`Could not extract GIF frames (${extractCode})`);
 
-        // Copy raw RGBA directly into ImageData — no PNG decode needed
-        imageData.data.set(frameSlice);
-        ctx.putImageData(imageData, 0, 0);
+      const allFrameData = await ffmpeg.readFile(rawExtractedPath);
+      if (typeof allFrameData === 'string') throw new Error('FFmpeg returned text frame data');
 
-        drawLayers(ctx, options.layers, layerBitmaps, width, height, index / fps);
+      const actualFrameCount = Math.floor(allFrameData.length / frameSize);
 
-        // Read back raw RGBA — getImageData is a fast memory copy
-        const outData = ctx.getImageData(0, 0, width, height);
-        const outBytes = new Uint8Array(outData.data.buffer, outData.data.byteOffset, outData.data.byteLength);
-        outputBuffer.set(outBytes, offset);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not create canvas context');
+
+      const layerBitmaps = await loadImageLayerBitmaps(options.layers);
+      const imageData = ctx.createImageData(width, height);
+
+      // Build the output raw data by processing each frame
+      const outputSize = actualFrameCount * frameSize;
+      const outputBuffer = new Uint8Array(outputSize);
+
+      try {
+        for (let index = 0; index < actualFrameCount; index++) {
+          options.onProgress?.({ message: `Drawing layers on frame ${index + 1}/${actualFrameCount}...`, progress: (index + 1) / actualFrameCount });
+
+          const offset = index * frameSize;
+          const frameSlice = allFrameData.subarray(offset, offset + frameSize);
+
+          // Copy raw RGBA directly into ImageData — no PNG decode needed
+          imageData.data.set(frameSlice);
+          ctx.putImageData(imageData, 0, 0);
+
+          drawLayers(ctx, options.layers, layerBitmaps, width, height, index / fps);
+
+          // Read back raw RGBA — getImageData is a fast memory copy
+          const outData = ctx.getImageData(0, 0, width, height);
+          const outBytes = new Uint8Array(outData.data.buffer, outData.data.byteOffset, outData.data.byteLength);
+          outputBuffer.set(outBytes, offset);
+        }
+      } finally {
+        closeBitmaps(layerBitmaps);
       }
+
+      // Write all processed frames as a single raw file
+      await ffmpeg.writeFile(rawOutputPath, outputBuffer);
+
+      options.onProgress?.({ message: 'Encoding final GIF...' });
+      const encodeCode = await ffmpeg.exec([
+        '-f', 'rawvideo',
+        '-pix_fmt', 'rgba',
+        '-s', `${width}x${height}`,
+        '-framerate', String(fps),
+        '-i', rawOutputPath,
+        '-frames:v', String(actualFrameCount),
+        '-filter_complex', `split[s0][s1];[s0]palettegen=max_colors=${colors}[p];[s1][p]paletteuse=${ffmpegDither(options.dither)}`,
+        '-gifflags', '-offsetting',
+        '-loop', '0',
+        outputPath,
+      ]);
+      if (encodeCode !== 0) throw new Error(`Could not encode GIF (${encodeCode})`);
+
+      const out = await ffmpeg.readFile(outputPath);
+      if (typeof out === 'string') throw new Error('FFmpeg returned text GIF data');
+      options.onProgress?.({ message: 'Preview ready.', progress: 1 });
+      return {
+        blob: new Blob([copyToArrayBuffer(out)], { type: 'image/gif' }),
+        fileName: withSuffix(options.media.name, 'meme', 'gif'),
+        mimeType: 'image/gif',
+      };
     } finally {
-      closeBitmaps(layerBitmaps);
+      await cleanupWorkDir(ffmpeg, workDir).catch(() => undefined);
     }
-
-    // Write all processed frames as a single raw file
-    await ffmpeg.writeFile(rawOutputPath, outputBuffer);
-
-    options.onProgress?.({ message: 'Encoding final GIF...' });
-    const encodeCode = await ffmpeg.exec([
-      '-f', 'rawvideo',
-      '-pix_fmt', 'rgba',
-      '-s', `${width}x${height}`,
-      '-framerate', String(fps),
-      '-i', rawOutputPath,
-      '-frames:v', String(actualFrameCount),
-      '-filter_complex', `split[s0][s1];[s0]palettegen=max_colors=${colors}[p];[s1][p]paletteuse=${ffmpegDither(options.dither)}`,
-      '-gifflags', '-offsetting',
-      '-loop', '0',
-      outputPath,
-    ]);
-    if (encodeCode !== 0) throw new Error(`Could not encode GIF (${encodeCode})`);
-
-    const out = await ffmpeg.readFile(outputPath);
-    if (typeof out === 'string') throw new Error('FFmpeg returned text GIF data');
-    options.onProgress?.({ message: 'Preview ready.', progress: 1 });
-    return {
-      blob: new Blob([copyToArrayBuffer(out)], { type: 'image/gif' }),
-      fileName: withSuffix(options.media.name, 'meme', 'gif'),
-      mimeType: 'image/gif',
-    };
-  } finally {
-    ffmpeg.off('progress', progressHandler);
-    await cleanupWorkDir(ffmpeg, workDir).catch(() => undefined);
-  }
+  }, onFfmpegProgress);
 }
 
 function drawLayers(
