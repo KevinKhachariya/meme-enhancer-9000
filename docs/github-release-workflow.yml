@@ -35,13 +35,15 @@ jobs:
       - name: Package platform downloads
         run: |
           cd dist/desktop/meme-enhancer-9000
-          zip -9 ../Meme-Enhancer-9000-windows-x64.zip meme-enhancer-9000-win_x64.exe resources.neu
-          zip -9 ../Meme-Enhancer-9000-linux-x64.zip meme-enhancer-9000-linux_x64 resources.neu
-          zip -9 ../Meme-Enhancer-9000-linux-arm64.zip meme-enhancer-9000-linux_arm64 resources.neu
-          zip -9 ../Meme-Enhancer-9000-linux-armhf.zip meme-enhancer-9000-linux_armhf resources.neu
-          zip -9 ../Meme-Enhancer-9000-macos-x64.zip meme-enhancer-9000-mac_x64 resources.neu
-          zip -9 ../Meme-Enhancer-9000-macos-arm64.zip meme-enhancer-9000-mac_arm64 resources.neu
-          zip -9 ../Meme-Enhancer-9000-macos-universal.zip meme-enhancer-9000-mac_universal resources.neu
+          cp ../../../LICENSE ./LICENSE
+          cp ../../../ATTRIBUTION.md ./ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-windows-x64.zip meme-enhancer-9000-win_x64.exe resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-linux-x64.zip meme-enhancer-9000-linux_x64 resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-linux-arm64.zip meme-enhancer-9000-linux_arm64 resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-linux-armhf.zip meme-enhancer-9000-linux_armhf resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-macos-x64.zip meme-enhancer-9000-mac_x64 resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-macos-arm64.zip meme-enhancer-9000-mac_arm64 resources.neu LICENSE ATTRIBUTION.md
+          zip -9 ../Meme-Enhancer-9000-macos-universal.zip meme-enhancer-9000-mac_universal resources.neu LICENSE ATTRIBUTION.md
 
       - name: Upload GitHub release assets
         uses: softprops/action-gh-release@v3
@@ -59,3 +61,5 @@ jobs:
             dist/desktop/Meme-Enhancer-9000-macos-x64.zip
             dist/desktop/Meme-Enhancer-9000-macos-arm64.zip
             dist/desktop/Meme-Enhancer-9000-macos-universal.zip
+            LICENSE
+            ATTRIBUTION.md

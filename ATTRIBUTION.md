@@ -7,7 +7,8 @@ This project incorporates the following third-party software.
 ## FFmpeg (via @ffmpeg/core) — GPL-2.0-or-later
 
 **Source:** https://ffmpeg.org  
-**Upstream license files:** `COPYING.GPLv2` (GPL), `COPYING.LGPLv2.1` (LGPL)
+**Upstream license files:** `COPYING.GPLv2` (GPL), `COPYING.LGPLv2.1` (LGPL)  
+**Bundled version:** `@ffmpeg/core@0.12.10` — the GPL WebAssembly build shipped with this app (compiled from FFmpeg source by [ffmpegwasm](https://github.com/ffmpegwasm/ffmpeg.wasm)).
 
 FFmpeg is compiled to WebAssembly via [ffmpegwasm](https://github.com/ffmpegwasm/ffmpeg.wasm)
 for browser-based video/image processing. The `@ffmpeg/core` package is distributed
